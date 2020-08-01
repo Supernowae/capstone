@@ -35,9 +35,12 @@ def features_past_generation(features_creation_function,
         matches_outcomes.append(match_features_outcome_1)
         matches_outcomes.append(match_features_outcome_2)
         if i%100==0:
-            print(str(i)+"/"+str(len(indices))+" matches treated.")
+            print(str(i)+"/"+str(len(indices))+" matches treated. "+ features_creation_function.__name__)
     train=pd.DataFrame(matches_outcomes)
     train.columns=[feature_names_prefix+str(i) for i in range(len(train.columns))]
+    
+    
+    
     return train
 
 
@@ -114,36 +117,46 @@ def features_general_creation(outcome,match,past_matches):
     player1=match.Winner if outcome==1 else match.Loser
     rank_player_1=match.WRank if outcome==1 else match.LRank
     rank_player_2=match.LRank if outcome==1 else match.WRank
-
+    
     best_ranking_as_winner=past_matches[(past_matches.Winner==player1)].WRank.min()
     best_ranking_as_loser=past_matches[(past_matches.Loser==player1)].LRank.min()
- 
-    if np.isnan(best_ranking_as_winner):
-        br = best_ranking_as_loser
-        if np.isnan(best_ranking_as_loser):
-            #print(f'bam {rank_player_1}')
-            br = rank_player_1
-    elif np.isnan(best_ranking_as_loser):
-        br = best_ranking_as_winner
-    elif best_ranking_as_winner < best_ranking_as_loser:
-        br = best_ranking_as_winner
-    elif best_ranking_as_winner >= best_ranking_as_loser:
-        br = best_ranking_as_loser
+    
+    best_ranking=np.nanmin(best_ranking_as_winner,best_ranking_as_loser)
+    
+    # elo
+    elo_player_1=match.elo_winner if outcome==1 else match.elo_loser
+    elo_player_2=match.elo_loser if outcome==1 else match.elo_winner
 
-    else:
-        print(f'Problem? As winner: {best_ranking_as_winner}, as loser: {best_ranking_as_loser}')
-        print(type(best_ranking_as_loser))
-        print(best_ranking_as_loser)
+
+    best_elo_as_winner=past_matches[(past_matches.Winner==player1)].elo_winner.max()
+    best_elo_as_loser=past_matches[(past_matches.Loser==player1)].elo_loser.max()
+    
+    best_elo=np.nanmax(best_elo_as_winner,best_elo_as_loser)
+   
+    ########------- Attention! Don't know if I do an algebraic sign error....
+    lowest_elo_diff_as_winner = past_matches[(past_matches.Winner==player1)].elo_diff.min()
+    highest_elo_diff_as_loser = past_matches[(past_matches.Winner==player1)].elo_diff.max()
         
     features_general+=[rank_player_1,rank_player_2,
                        rank_player_2-rank_player_1,
-                       int(rank_player_1>rank_player_2), br]
+                       int(rank_player_1>rank_player_2), 
+                       best_ranking,
+                      elo_player_1, elo_player_2 ]
     #best_ranking_as_winner=past_matches[(past_matches.Winner==player1)].WRank.min()
     #best_ranking_as_loser=past_matches[(past_matches.Loser==player1)].LRank.min()
     
     #best_ranking=min(best_ranking_as_winner,best_ranking_as_loser)
     #features_general.append(best_ranking)
+    
     return features_general
+
+featrures_general_dict = {'generalft0': 'Rank Player 1',
+                          'generalft1': 'Rank Player 2',
+                          'generalft3': 'diff Rank (- if opponent has lower rank)',
+                          #'generalft5': 'best rank of player1 during the last X days',
+                          'generalft4': 'is the rank the player worse? (1 if yes)',
+                          'generalft5': 'elo Player 1',
+                          'generalft6': 'elo Player 2',
 
 
 '''
