@@ -115,9 +115,12 @@ def plot_delta_hisograms(k1,k2, limit_y, title):
 
 ##############################################################
 # calculating functions
-    
+
+
 def gain_perc_b365(dat, tax=0.05, round_ = None, limit = 200, threshold = None, diff_elo = 0, diff_rank = 0):
     '''
+    OBSOLETE and BUGGY!!!!
+    
     Gives back the avarage performace of betting. Staight betting on the player with the better elo-score AND the better Rank.
     
     dat: the given DataFrame.
@@ -135,6 +138,9 @@ def gain_perc_b365(dat, tax=0.05, round_ = None, limit = 200, threshold = None, 
     (n_bets: number of bets)
     (n_good_bets: number of sucessful bets)
     '''
+    
+    
+    
     #if therhold == None:
     #    thr = 1/(1-tax)
     #else:
