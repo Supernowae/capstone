@@ -35,9 +35,9 @@ def features_past_generation(features_creation_function,
         matches_outcomes.append(match_features_outcome_1)
         matches_outcomes.append(match_features_outcome_2)
         if i%100==0:
-            print(str(i)+"/"+str(len(indices))+" matches treated. "+ features_creation_function.__name__)
+            print(str(i)+"/"+str(len(indices))+" matches treated. "+ features_creation_function.__name__ + str(days))
     train=pd.DataFrame(matches_outcomes)
-    train.columns=[feature_names_prefix+str(i) for i in range(len(train.columns))]
+    train.columns=[feature_names_prefix + "_" + str(days) +"_" +str(i) for i in range(len(train.columns))]
     
     
     
@@ -66,6 +66,19 @@ def features_player_creation(outcome,match,past_matches):
     features_player.append(per_victory_surface)
     return features_player
 
+features_player_dict = {'playerft_xxx_0': 'number of won matches',
+                         'playerft_xxx_1': 'number of lost matches',
+                         'playerft_xxx_2': 'number of played matches',
+                         'playerft_xxx_3': 'percentage of victory',
+                         'playerft_xxx_4': 'number of won matches on this surface',
+                         'playerft_xxx_5': 'number of lost matches on this surface',
+                         'playerft_xxx_6': 'number of matches on this surface',
+                         'playerft_xxx_7': 'percentage of victory on this surface'
+
+                         }
+                         #'playerft_xxx_': '',
+
+
 def features_recent_creation(outcome,match,past_matches):
     ##### Match information extraction (according to the outcome)
     player=match.Winner if outcome==1 else match.Loser
@@ -73,15 +86,30 @@ def features_recent_creation(outcome,match,past_matches):
     ##### Last matches
     wins=past_matches[past_matches.Winner==player]    
     losses=past_matches[past_matches.Loser==player]    
-    todo=pd.concat([wins,losses],0)
+    todo=pd.concat([wins,losses],0)   # <-------------- QUESTION: Is it sorted? What happens?
     if len(todo)==0:
-        return [np.nan]*7
+        return [np.nan]*11       # <---------- adjust the number of features !
     # Days since last match
     dslm=(date-todo.iloc[-1,:].Date).days
     # Was the last match won ?
     wlmw=int(todo.iloc[-1,:].Winner==player)
     # Ranking of the last player played
-    rlpp=todo.iloc[-1,:].WRank
+    if wlmw:
+        rlpp=todo.iloc[-1,:].WRank
+        # Rank of the opponent of last match
+        rlpp_opp =todo.iloc[-1,:].LRank
+        # elo last match
+        elolpp = todo.iloc[-1,:].elo_winner
+        elolpp_opp = todo.iloc[-1,:].elo_loser
+        
+    else:
+        rlpp=todo.iloc[-1,:].LRank
+        rlpp_opp =todo.iloc[-1,:].WRank
+        elolpp = todo.iloc[-1,:].elo_loser
+        elolpp_opp = todo.iloc[-1,:].elo_winner
+    
+    # Elo diff
+    elodiff = elolpp - elolpp_opp
     # Number of sets of last match played
     nslmp=todo.iloc[-1,:]['Best of']
     # Number of sets won during last match played
@@ -93,8 +121,24 @@ def features_recent_creation(outcome,match,past_matches):
     else:
         ilm=np.nan
         iitp=np.nan
-    features_recent=[dslm,wlmw,rlpp,nslmp,nswlmp,ilm,iitp]
+        
+    features_recent=[dslm,wlmw,rlpp,nslmp,nswlmp,ilm,iitp,rlpp_opp, elolpp, elolpp_opp, elodiff]
+      
     return features_recent
+
+features_recent_dict = {'recentft_xxx_0': 'Days since last match',
+                         'recentft_xxx_1': 'was the last match won?',
+                         'recentft_xxx_2': 'Ranking of the player in the last match',
+                         'recentft_xxx_3': 'number sets best_of of the last match',
+                         'recentft_xxx_4': 'number of won sets in the last match',
+                         'recentft_xxx_5': '0 if player retired in the last match',
+                         'recentft_xxx_6': 'has player retired in the past?',
+                         'recentft_xxx_7': 'Ranking of the opponent in the last match',
+                         'recentft_xxx_8': 'elo-score of the player in the last match',
+                         'recentft_xxx_9': 'elo-score of the opponent in the last match',
+                         'recentft_xxx_10': 'elo-difference in the last match'
+                         }
+                         #'recentft_xxx_': '',
 
 def features_duo_creation(outcome,match,past):
     features_duo=[]
@@ -111,6 +155,15 @@ def features_duo_creation(outcome,match,past):
     features_duo.append(per_victory_player1)
     return features_duo
 
+features_duo_dict = {'duoft_xxx_0': 'matches against opponent',
+                      'duoft_xxx_1': 'wins against opponent',
+                      'duoft_xxx_2': 'losses against opponent',
+                      'duoft_xxx_3': 'percentage of victory against opponent'
+
+                         }
+                         #'duoft_xxx_': '',
+
+
 def features_general_creation(outcome,match,past_matches):
     features_general=[]
     ##### Match information extraction (according to the outcome)
@@ -121,7 +174,7 @@ def features_general_creation(outcome,match,past_matches):
     best_ranking_as_winner=past_matches[(past_matches.Winner==player1)].WRank.min()
     best_ranking_as_loser=past_matches[(past_matches.Loser==player1)].LRank.min()
     
-    best_ranking=np.nanmin(best_ranking_as_winner,best_ranking_as_loser)
+    best_ranking=np.nanmin([best_ranking_as_winner,best_ranking_as_loser])
     
     # elo
     elo_player_1=match.elo_winner if outcome==1 else match.elo_loser
@@ -131,17 +184,22 @@ def features_general_creation(outcome,match,past_matches):
     best_elo_as_winner=past_matches[(past_matches.Winner==player1)].elo_winner.max()
     best_elo_as_loser=past_matches[(past_matches.Loser==player1)].elo_loser.max()
     
-    best_elo=np.nanmax(best_elo_as_winner,best_elo_as_loser)
+    best_elo=np.nanmax([best_elo_as_winner,best_elo_as_loser])
    
     ########------- Attention! Don't know if I do an algebraic sign error....
     lowest_elo_diff_as_winner = past_matches[(past_matches.Winner==player1)].elo_diff.min()
-    highest_elo_diff_as_loser = past_matches[(past_matches.Winner==player1)].elo_diff.max()
+    highest_elo_diff_as_loser = past_matches[(past_matches.Loser==player1)].elo_diff.max()
         
     features_general+=[rank_player_1,rank_player_2,
                        rank_player_2-rank_player_1,
                        int(rank_player_1>rank_player_2), 
                        best_ranking,
-                      elo_player_1, elo_player_2 ]
+                       elo_player_1, elo_player_2, 
+                       elo_player_1 - elo_player_2,
+                       int(elo_player_1>elo_player_2),
+                       best_elo, 
+                       lowest_elo_diff_as_winner,
+                       highest_elo_diff_as_loser]
     #best_ranking_as_winner=past_matches[(past_matches.Winner==player1)].WRank.min()
     #best_ranking_as_loser=past_matches[(past_matches.Loser==player1)].LRank.min()
     
@@ -150,13 +208,22 @@ def features_general_creation(outcome,match,past_matches):
     
     return features_general
 
-featrures_general_dict = {'generalft0': 'Rank Player 1',
-                          'generalft1': 'Rank Player 2',
-                          'generalft3': 'diff Rank (- if opponent has lower rank)',
+features_general_dict = {'generalft_XXX_0': 'Rank Player 1',
+                          'generalft_XXX_1': 'Rank Player 2',
+                          'generalft_XXX_3': 'diff Rank (- if opponent has lower rank)',
                           #'generalft5': 'best rank of player1 during the last X days',
-                          'generalft4': 'is the rank the player worse? (1 if yes)',
-                          'generalft5': 'elo Player 1',
-                          'generalft6': 'elo Player 2',
+                          'generalft_XXX_4': 'is the rank the player worse? (1 if yes)',
+                          'generalft_XXX_5': 'elo Player 1',
+                          'generalft_XXX_6': 'elo Player 2',
+                          'generalft_XXX_7': 'difference in elo, if pos. opponent is weaker',
+                          'generalft_XXX_8': 'if 1 player has a higher elo',
+                          'generalft_XXX_9': 'best elo of the player in last X days',
+                          'generalft_XXX_10': 'lowest elo difference as winner',
+                          'generalft_XXX_11': 'highest elo as loser'
+                          }
+                          
+                          
+                          #'generalft': '',
 
 
 '''
