@@ -7,6 +7,8 @@ Capstone project ATP betting
 
 # Inital data
 
+## Data cleaning
+
 # elo-score
 
 # Tax
@@ -14,10 +16,26 @@ Capstone project ATP betting
 # EDA
 
 # Feature engineering
+Based on the given data several other features can be generated. 
+
+## Past features
+
+## One-hot features
+The initial features "Series", "Court", "Surface", "Round", "Best of", "Tournament" were converted to encoded bool features. 
+The player names were also one-hot encoded. For each outcome the name of the player and the name of the opponent.
+
+## Missing values
 
 # Prediction with XGBoost
+The attempt is to predict the outcomes right and increase the ROI.
+The decision to use XGBoost is based the fact that it can handle missing values. The missing values were generated in the features. So the features are not ready to use in an ANN or AdaBoost with trees or forests.
 
-## 
+(To make it short: I didn't find a predictive model for long term gain yet...)
+
+## Models
+It figured out that the XGB models is very very sensitive to the train data. A slight variation of the train and eval data gives complete different scores and also the predictions of the test set is different. Due to this I used several equal models but with slightly different train data. So in this cas it is an ensemble of 9 XGB models with the hope that their common opinion will rise the ROI.
+
+I played with some parameters, especially *learning rate, max_depth and early stopping*, on the one hand to increse the precision and the ROI on the other hand to avoid overfitting. I observed that better train loss often has a worse eval loss. That means that there remained a lot of work... I assume that it depends on the XGB-parameters but maybe also on the features.
 
 ## Split the data
 The data is split to a train set, an eval set and a test set. The reference point is the start date of testing. A few hundred samples before a used as eval set and several thousend samples befor the eval set is used as train set. A few hundred after this point are used for testing.
@@ -53,7 +71,7 @@ Note: The different confidence starategies may need different thresholds.
 There are several points that can be improved for better results:
 
 - calculate surface dependent elo-scores
-- maybe imrove the fuction for the elo-score
+- maybe imrove the fucntion for the elo-score
 - parallelize the calculation of the features for accelerated computation and playing with the hyperparameters in the features.
 - Try XGBmodels without odds in the features. The feature importance of the odds seems to be quite high so they have a large influence on the decisions. But the odds gives back the opinion / confidence of the bookmaker and other betters. I think it would be better to make an own opinion without the influence of the odds. Or maybe at least a combination of it in an ensemble that some models calculte with odds and others without and then check the voting.
 - Find a way to handle the missing values un the generated features for usage with other predictors that do not accept NaNs. Then try ANN, Random Forests e.g. maybe with other boosters.
@@ -61,3 +79,10 @@ There are several points that can be improved for better results:
 - Work / optimization of confidence calculation.
 - Improve the voting system
 - Filtering *samples* of best players and best tournament right before the model training and not only the *one-hot features*.
+- Maybe implement a kind of gridsearch for the models to figure out better parameters. Due to the split and the scorer it won't be as easy.
+- Redesign the whole system to make only one sample per match and let the model directly decide who wins.
+- Voting by another model (ANN?)
+
+# Apendix
+
+## Features
