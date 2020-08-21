@@ -4,10 +4,120 @@ Note: This project is still in progress
 Capstone project ATP betting
 
 # Betting
+## How betting works
+
+We just bet on the player where we assume or we are convinced that he will win.
+Assume that this player in this match has the odd of *1.1*. If we bet with a wager of 1€ and this player wins the cashout will be 1.1€  `cashout = wager * odd`. Our profit would be 0.1€ `profit = cashout - wager`. If the player loses the cashback would be 0€ and the wager would be lost.
+
+
+## A small example how odd creation works.
+
+In following cases 1 - 3 player 1 is the favorite and player 2 the underdog. There are several reasons why a player could be the favorite. For the odds only the amount of bets set on the one or the other player until the begining of the match. If more bets are set on the one player the odd will fall and the odd for the opponent will raise. Only the collected wager by the bookmaker can be paid out.
+
+But the bookmaker wants also to make profit, so not all collected wagers will be cashed out after the match equal how the outcome is. He just diminutes the odds a bit for a lower total cashout and makes a profit everytime. The mentioned possible real odds are a rough assumption.
+
+In the first three cases player 1 is more and more the favorite due to the distribution of the betters. In the third case the bookmaker cannot lower the odds. The marginal profit is caused by rounding digits. But if no one would bet on player 2 the odd would be 1.0 because there wouldn't be any money to distribute. Let's have a look in case of 100 gamblers..
+
+
+**Case 1**
+
+_|Player 1|Player 2|Sum
+-|-|-|-
+Number of betters|80|20|100
+Nominal odd|1.25|5.0|
+possible real odd|1.19|3.0|
+cashout|95.2|60.0|
+bookmakers profit|4.8|40|
+
+
+**Case 2**
+
+_|Player 1|Player 2|Sum
+-|-|-|-
+Number of betters|90|10|100
+Nominal odd|1.11|10.0|
+possible real odd|1.08|5.0|
+cashout|97.2|50.0|
+bookmakers profit|2.8|50|
+
+**Case 3**
+
+_|Player 1|Player 2|Sum
+-|-|-|-
+Number of betters|99|1|100
+Nominal odd|1.01|100.0|
+possible real odd|1.01|10.0|
+cashout|99.99|10.0|
+bookmakers profit|0.01|90.0|
+
+
+In this case the wagers are equal distributed, even in this case the bookmaker makes his profit.
+
+**Case 4**
+
+_|Player 1|Player 2|Sum
+-|-|-|-
+Number of betters|50|50|100
+Nominal odd|2.0|2.0|
+possible real odd|1.7|1.7|
+cashout|85.0|85.0|
+bookmakers profit|15.0|15.0|
+
+## Betting the favorite
+The odds are the indicator who is the favorite. We could just join the opinion of the mass and bet on the favorite. In this example we bet only on *R. Nadal* who belongs to the best players ever. Let's see what happen... (PS = odds Pinnacle winner/loser,  B365 = odds B365 winner/loser)
+
+Date|Winner	|Loser	|PSW	|PSL	|B365W	|B365L
+-|-|-|-|-|-|-
+2018-04-20	|Nadal R.	|Thiem D.	|1.18	|5.77	|1.14	|5.5
+2018-04-21	|Nadal R.	|Dimitrov G.	|1.07	|11.60	|1.06	|10.0
+2018-04-22	|Nadal R.	|Nishikori K.	|1.07	|12.20	|1.05	|11.0
+2018-04-25	|Nadal R.	|Carballes Baena R.	|1.01	|29.16	|1.01	|26.0
+2018-04-26	|Nadal R.	|Garcia-Lopez G.	|1.01	|29.16	|1.01	|26.0
+2018-04-27	|Nadal R.	|Klizan M.	|1.06	|13.30	|1.02	|15.0
+2018-04-28	|Nadal R.	|Goffin D.	|1.09	|9.71	|1.05	|11.0
+2018-04-29	|Nadal R.	|Tsitsipas S.	|1.06	|13.84	|1.04	|13.0
+2018-05-09	|Nadal R.	|Monfils G.	|1.04	|15.92	|1.02	|17.0
+2018-05-10	|Nadal R.	|Schwartzman D.	|1.03	|22.73	|1.02	|19.0
+**Sum**|Number of bets:|**10**|**10.62**|-|**10.42**|-
+**Profit**| | |**0.62**|**+6.2%**|**0.42**|**+4.2%**
+**Sum**|with tax 5%| |**10.09**|-|**9.899**|-
+**Profit**|with tax 5% | |**0.09**|**+0.9%**|**-0.10**|**-1.0%**
+2018-05-11	|Thiem D.	|Nadal R.	|10.67	|1.08	|11.00	|1.05
+**Sum**|Number of bets:|**11**|**10.62**|-|**10.42**|-
+**Profit**|-|-|**-0.38**|**-3.5%**|**-0.58**|**-5.3%**
+**Sum**|with tax 5%| |**10.09**|-|**9.899**|-
+**Profit**|with tax 5% | |**-0.91**|**-8.3%**|**-1.1**|**-10.0%**
+
+Now, we were right 10 times out of 11 and the prediction was right in over 90%. But one match destroyed our profit. Nadal lost against Thiem against the estimation (5:7, 3:6). The odds were clearly for Nadal and the time before they played (2018-04-20) Nadal won 6:0, 6:2 so there were not really doubts that he would win once more.
+
+
+But now start halndle the data...
 
 # Inital data
+The initial data was downloaded from [http://tennis-data.co.uk/alldata.php](http://tennis-data.co.uk/alldata.php) and stored in data folder.
+
+It contains ATP-Tennis matches over the last 20 years with among other features:
+
+- Date
+- Name of the winner
+- Name of the Loser
+- ATP-ranks of the players
+- Result
+- Tournament
+- Surface
+- Series
+- Odds of several bookmakers for the most of matches. (Some bookmakers have more odds others less)
+- ...
+
 
 ## Data cleaning
+The provided data is not really ready to use. There are several odds of different bookmakers but there is no bookmaker with odds for all matches. We'll keep only the odds of the two bookmakers with least missing values. So we keep the odds of B365 and Pinnacle and all others are dropped. 
+
+Not ranked players are set to 2000. The player names are written in different ways. Tailing whitespaces were stripped but some names had to be corrected especially if there are second names.
+
+(Note: maybe another cleaning would be useful after the feature engineering because there will occur generated NaNs that might make problems in further processing with ML-models. But for the moment ist is sufficient)
+
+
 
 # elo-score
 The elo-score / elo-rating is a value that describes the performance in the past of the player. It takes into account the wins and losses in the past but also the performance of the opponent. So a success against a strong comtetitor has a larger gain as against a weak opponent. Further information on [Wiki](https://en.wikipedia.org/wiki/Elo_rating_system)
@@ -43,7 +153,7 @@ Note: I observed that it looks like some bookmakers offer betting with a wager o
 # EDA
 So let's have a look on the data we have and try if there is a way to make profit with simple strategies.
 
-How to figure out the better player where we are confident that he wins?
+How to figure out the better player where we are confident that he wins? And is it worth to bet on him to make money?
 
 
 
@@ -85,25 +195,135 @@ The animated development of the ROI according to the strategies with the differe
 ### Strategy: Betting the better
 Straight forward, just betting on all matches with at least the shown delta values.
 
-As you see there is no constellation 
+As you see there is no constellation that makes profit. Over a longer time it makes only loss. 
 
+<img src="figures/better_2009_perc_131.png">
+
+
+
+
+<img src="figures/better_odd_2009_perc_131.png">
+
+With the attempt to rise the profit and eliminating the lowest odds, that means min_odd = 1.08 makes it worse not better. The high delta elo area is most affected. If we look on the scale we notice that the upper limit rised a bit, that means that there could be areas with profit. 2344 bets fell out that means that nearly 10% of the bets were in the lowes odd area.
+
+Maybe there is a setup of min and max odds where a profit is generated. But this is future work. 
 
 ### Strategy: Betting crossover 1
+Let's do something else. Just flip one of the features to negative and see what happen. The idea is somehow to pick underestimated underdogs. The odds are influenced by the majority of betters. I don't know which basis they prefer. I don't assume that the majority look on the elo, but maybe some professional betters with high wages. 
+
+Considering the graph with the outvome distribution I would assume that a player is rather overestimated if he has a much better rank. Just look....
+
+<img src="figures/cross_1_2009_perc_131.png">
+
+**And there it is!** the profit area with a straight forward strategy. 
+
+<img src="figures/cross_1_odd_2009_perc_131.png">
+
+A threshold in the min odds do not make a signifikant effect. Only 7 bets fell out. It means that the majority of bets has quite high odds.. Mybe these are the underdogs we search for where noone else would bet on...
+
+<img src="figures/cross_1_odd_tax_2009_perc_131.png">
+
+And even the diminution of the profit by the tax does not kick it out! And it seems to work as well over the last 10 years as well over the last 5 years.
+
+<img src="figures/cross_1_over_time.png">
+Another interesting aspect of this finding is that **only 44 of the 102 matches were bet right** . 58 bets were lost and the balance is still positive. This differs completely from the Nadal example at the top. It seems to be a funny combination of prediction and high odds.
+
+
+Nevertheless unfortunately the amount of matches is quite low and it will be hard to figure out exactly such matches in time to bet on it. In the graph you see that there were a bit more that 100 matche in 10 years, that makes about 10 matches a year. And normaly there are over 2000 matches a year. 
+
+**But hey, there is a way!** and if it's not the only strategy it is at least a part of a portfolio of betting strategies! 
+
+
 
 ### Strategy: Betting crossover 2
+So make it the other way, better elo worse rank.
 
+<img src="figures/cross_2_2009_perc_131.png">
+
+You see that there is a profit area but there much less matches as in the strategy before. 
+
+A slight profit area seems to be around delta elo = 200 but I'm not sur if it could be consistent.
+
+<img src="figures/cross_2_odd_2009_perc_131.png">
+
+There wer no significant changes with the low odd filter. About 30 bets fell out in the area with lower deltas.
+
+<img src="figures/cross_2_odd_tax_2009_perc_131.png">
+
+As you see the tax kills this strategy. Maybe the the very few high delta elo could be put in a strategy portfolio.
+
+## Conclusion
+As shown there are ways for a more or less simple strategy to make profit. Even if the strategy crossover 1 gives back ony a few matches it is an effort. Further simple analyses considering more the limits of the odds cold maybe discover other profit spots.
 
 # Feature engineering
-Based on the given data several other features can be generated. 
+The previous chapter showed how features can provide help to make a betting decision to make profit. The strategy analyses were a kind of manual decision tree. Let the machine create further decision trees with many more features to find a way to the profit...
+
+Based on the given data several other features can be generated. Some others can be directly one-hot encoded.
+
+We make one sample per player per match. So the machine should decide for each player if he will win or not. The advantage is that the labels are completely balanced and there is no problem with it which player is called first. That avoids the problem that the feature player1 and player2 could have an importance. Now we have player and opponent and flipped in the next sample.
 
 ## Past features
+
+These features are created of the data XXX days before the match. All these features are also flipped as the opponent features.
+
+The ***player features*** are set to the past 5 days and describe latest match statistic. 
+
+- playerft_xxx_0: number of won matches
+- playerft_xxx_1: number of lost matches
+- playerft_xxx_2: number of played matches
+- playerft_xxx_3: percentage of victory
+- playerft_xxx_4: number of won matches on this surface
+- playerft_xxx_5: number of lost matches on this surface
+- playerft_xxx_6: number of matches on this surface
+- playerft_xxx_7: percentage of victory on this surface
+
+
+The ***duo features*** describe the statistic how these players matched the last times (maybe they hadn't a common match in the past). The period is set to the last 150 days. 
+
+- duoft_xxx_0: matches against opponent
+- duoft_xxx_1: wins against opponent
+- duoft_xxx_2: losses against opponent
+- duoft_xxx_3: percentage of victory against opponent
+
+The ***general features*** contain reputation data during the last 150 days as rank, elo,...
+
+- generalft_XXX_0: Rank Player 1
+- generalft_XXX_1: Rank Player 2
+- generalft_XXX_3: diff Rank (- if opponent has lower rank)
+- generalft_XXX_4: is the rank the player worse? (1 if yes)
+- generalft_XXX_5: elo Player 1
+- generalft_XXX_6: elo Player 2
+- generalft_XXX_7: difference in elo, if pos. opponent is weaker
+- generalft_XXX_8: if 1 player has a higher elo
+- generalft_XXX_9: best elo of the player in last X days
+- generalft_XXX_10: lowest elo difference as winner
+- generalft_XXX_11: highest elo difference as loser
+
+The ***recent features*** gives the performance in the latest matches. Even if most of these features look on the last match the period is also 150 days.
+
+- recentft_xxx_0: Days since last match
+- recentft_xxx_1: was the last match won?
+- recentft_xxx_2: Ranking of the player in the last match
+- recentft_xxx_3: number sets best_of of the last match
+- recentft_xxx_4: number of won sets in the last match
+- recentft_xxx_5: 0 if player retired in the last match
+- recentft_xxx_6: has player retired in the past?
+- recentft_xxx_7: Ranking of the opponent in the last match
+- recentft_xxx_8: elo-score of the player in the last match
+- recentft_xxx_9: elo-score of the opponent in the last match
+- recentft_xxx_10: elo-difference in the last match
+
+
+The number of days can be seen as **hyper-parameter** for the features. Changing the value could possibly bring a benefit. Additionally we could make the features for several time periods, possibly a tendency of the fitness or performance of a player can be discovered.
+
+The creation of these features takes a lot of computational time so that just playing around with it is not easy. For furture-work the algorithm could be revised and mayby accelerated. At least the feature blocks should be run in parallel for time saving.
 
 ## One-hot features
 The initial features "Series", "Court", "Surface", "Round", "Best of", "Tournament" were converted to encoded bool features. 
 The player names were also one-hot encoded. For each outcome the name of the player and the name of the opponent.
 
 ## Missing values
-Due to the fact that some past features are not applicapable everytime. So if a player had no matches durching the last few days the ratio of won matches e.g. is a NaN. Set it to 0 is not suitable because it would be a false information. Especially in the *duo_features*, that means the direct comparison of the players, contain many missing values. The chance that exactly these players matched each other in the rather short time period inspected (150 days) is low. Of course it can be discussed if such features are useful at all. But I would say that they are at least not useless...
+Due to the fact that some past features are not applicapable everytime some features produce missing values. So if a player had no matches durching the last few days the ratio of won matches e.g. is a NaN. Set it to 0 is not suitable because it would be a false information. Especially in the *duo_features*, that means the direct comparison of the players, contain many missing values. The chance that exactly these players matched each other in the rather short time period inspected (150 days) is low. Of course it can be discussed if such features are useful at all. But I would say that they are at least not useless...
 
 
 # Prediction with XGBoost
@@ -147,23 +367,30 @@ For the common opinion/decision according to the above mentioned confidences of 
 Note: The different confidence starategies may need different thresholds.
 
 ### Prediction and results
+Some model setups were run. The testing ran over a longer time (begin of 2014 until end of 2016) in chunks of 500 matches as test data starting each month. The train and eval sets were split as described above according to the test start data. 
+
+The following is only one setup. It is the one that has at least a positive profit in the end even it is not really satisfactory. Other results are [here](gxb_results_summary.md)
+
+<img src="figures/xgb_res_summary_12.png">
+
+### Conclusion
+As you see the results are not satisfactory yet. At the moment it is still a kind of gambling instead of a proper predictive model for permanent making money. I'm sure that there is a way but an amount of research remained to find it.
 
 # Future work
 There are several points that can be improved for better results:
 
 - calculate surface dependent elo-scores
-- maybe imrove the fucntion for the elo-score
+- handling of np.nan in player rank
+- maybe improve the fucntion for the elo-score
 - parallelize the calculation of the features for accelerated computation and playing with the hyperparameters in the features.
 - Try XGBmodels without odds in the features. The feature importance of the odds seems to be quite high so they have a large influence on the decisions. But the odds gives back the opinion / confidence of the bookmaker and other betters. I think it would be better to make an own opinion without the influence of the odds. Or maybe at least a combination of it in an ensemble that some models calculte with odds and others without and then check the voting.
 - Find a way to handle the missing values un the generated features for usage with other predictors that do not accept NaNs. Then try ANN, Random Forests e.g. maybe with other boosters.
 - Improve the precision. Check if the gain as loss function is the expediant way.
 - Work / optimization of confidence calculation.
 - Improve the voting system
-- Filtering *samples* of best players and best tournament right before the model training and not only the *one-hot features*.
+- Filtering *samples* of best players and best tournament right before the model training and not only drop the *one-hot features*.
 - Maybe implement a kind of gridsearch for the models to figure out better parameters. Due to the split and the scorer it won't be as easy.
 - Redesign the whole system to make only one sample per match and let the model directly decide who wins.
-- Voting by another model (ANN?)
+- Voting by another model as transfer learning (ANN?)
 
-# Appendix
 
-## Features
